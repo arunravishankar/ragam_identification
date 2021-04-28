@@ -66,7 +66,10 @@ def sangeethapriya_df(composers, ragams, kritis, artists, uploaders, savefile = 
         
     return
 
+def main():
+    composers, ragams, kritis, artists, uploaders = sangeethapriya_meta_data_scraper()
+    sangeethapriya_df(composers, ragams, kritis, artists, uploaders, 'df_sangeethapriya')
+    return
 
-composers, ragams, kritis, artists, uploaders = sangeethapriya_meta_data_scraper()
-
-sangeethapriya_df(composers, ragams, kritis, artists, uploaders, 'df_sangeethapriya')
+if __name__ == 'main':
+    main()
