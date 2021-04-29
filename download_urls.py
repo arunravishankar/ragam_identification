@@ -101,8 +101,7 @@ def high_ragam_counts_sample(df, x, samp):
     sample_df = over_x_df[over_x_df['Ragam']==list(high_ragam_counts.keys())[0]].sample(samp, random_state = 0)
 
     for i in range(1,len(high_ragam_counts)):
-        print(sample_df.head())
-        sample_df.append(over_x_df[over_x_df['Ragam']==list(high_ragam_counts.keys())[i]].sample(samp, random_state = 0))
+        sample_df = sample_df.append(over_x_df[over_x_df['Ragam']==list(high_ragam_counts.keys())[i]].sample(samp, random_state = 0))
         
     
     sample_df.to_csv('over{}ragams{}sample.csv'.format(x,samp))
@@ -218,13 +217,14 @@ def main():
     Saves the df 
     """
 
-    df = pd.read_csv('df_sangeethapriya.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
-    df = df_uploaders_album_ids(df)
-    df['Album hrefs'] = futures_albums(df['Uploader'], df['Album ID'], lim=2000)
+    #df = pd.read_csv('df_sangeethapriya.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
+    #df = df_uploaders_album_ids(df)
+    #df['Album hrefs'] = futures_albums(df['Uploader'], df['Album ID'], lim=2000)
     #Takes about 2 hours to run
-    df = clean_no_null(df, 'Album hrefs')
-    df = df.drop(['Uploader', 'Album ID'], axis=1)
-    df.to_csv('df_album_hrefs.csv', index = False)
+    #df = clean_no_null(df, 'Album hrefs')
+    #df = df.drop(['Uploader', 'Album ID'], axis=1)
+    #df.to_csv('df_album_hrefs.csv', index = False)
+    df = pd.read_csv('df_album_hrefs.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
     df = high_ragam_counts_sample(df, 100, 100)
     df['Download URLs'] = download_urls(df, start = 0, end = len(df), cookie = cookie)
     #Takes about 8-9 hours to run
