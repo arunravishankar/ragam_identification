@@ -2,6 +2,15 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import re
+from requests_futures.sessions import FuturesSession
+from datetime import datetime
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
+# Update this every time you run it
+
+cookie = 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=gfhi25ituanlqev6068p0v1kg4; _gat=1; sessiontime=1619698875'
+
 
 
 def df_uploaders_album_ids(df):
@@ -17,7 +26,7 @@ def df_uploaders_album_ids(df):
 
 
 
-def get_album_href(response):
+def get_album_href_(response):
     """
     Gets the album urls for a file 
     by using the Concert ID and 
@@ -68,20 +77,13 @@ def futures_albums(uploaders, album_ids, lim=2000):
             payload = "UPLOADER={}&CONCERT_ID={}".format(uploaders[i], album_ids[i])
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             futures.append(session.post(url, headers = headers, data = payload))
-        album_urls = [get_album_href_t(f.result()) for f in futures]
+        album_urls = [get_album_href_(f.result()) for f in futures]
         all_album_urls.extend(album_urls)
         marker=marker+lim
     return all_album_urls    
 
-def get_no_null_df(df):
-    """
-    Gets the dataframe after removing null entries for album hrefs
-    args: df - dataframe containing Album hrefs
-    return: df - dataframe without null entries in Album hrefs
-    """
-    return df[df['Album hrefs'] != 'None']
 
- def high_ragam_counts_sample(df, x, samp):
+def high_ragam_counts_sample(df, x, samp):
     """
     Picking ragams that have at least x number of 
     files in the database. This will remove rare ragams from
@@ -96,19 +98,15 @@ def get_no_null_df(df):
     ragam_counts = df['Ragam'].value_counts()
     high_ragam_counts = ragam_counts[ragam_counts > x]
     over_x_df = df[df.groupby('Ragam')['Ragam'].transform('size')>x]
-    sample_df = pd.DataFrame()    
-    for i in range(len(high_ragam_counts)):
-        high_ragams_df = over_x_df[over_x_df['Ragam']==list(high_ragam_counts.keys())[i]]
-        sample_df.append(high_ragams_df.sample(samp, random_state = 0))
+    sample_df = over_x_df[over_x_df['Ragam']==list(high_ragam_counts.keys())[0]].sample(samp, random_state = 0)
+
+    for i in range(1,len(high_ragam_counts)):
+        print(sample_df.head())
+        sample_df.append(over_x_df[over_x_df['Ragam']==list(high_ragam_counts.keys())[i]].sample(samp, random_state = 0))
+        
     
-    sample_df.to_csv('over{}ragams{}sample.csv'.format(x,sample))
+    sample_df.to_csv('over{}ragams{}sample.csv'.format(x,samp))
     return sample_df
-
-
-def freq_ragams_df(df):
-
-
-
 
 
 def get_url_download_(response, track_table):
@@ -127,7 +125,7 @@ def get_url_download_(response, track_table):
     if filelist_text is None:
         return('None')
     else:
-        print(filelist_text)
+        #print(filelist_text)
         if filelist_text.find_all('li', {'class':'audio'}) is None:
             return('None')
         else:
@@ -158,6 +156,8 @@ def download_urls(df, start = 0, end = 10, cookie = cookie):
     returns: all_download_urls - list of all download urls
     """
     all_download_urls = []
+    urls = list(df['Album hrefs'])
+    tracks = list(df['Track'])
     for i in range(start, end):
         #Print the current time for every 50 urls obtained
         if i%50 ==0:
@@ -166,9 +166,8 @@ def download_urls(df, start = 0, end = 10, cookie = cookie):
             print("{} Current Time = {}".format(i, current_time))
         payload = {}
         headers = {'Cookie': cookie}
-         
-        url = df['Album hrefs'][i]
-        track = df['Track'][i]
+        url = urls[i]
+        track = tracks[i]
 
         session = requests.Session()
         retry = Retry(connect=3, backoff_factor=0.5)
@@ -197,16 +196,40 @@ def append_download_urls_save_df(df, download_urls, filename):
     df.to_csv(filename, index=False)
     return
 
-def clean_no_null(df):
+def clean_no_null(df, column):
     """
     Removes the entries that do not have download_urls
     args: df
     returns: df
     """
-    return(df[df['Download URLs'] != 'None'])
+    return(df[df[column] != 'None'])
+
+
 
 def main():
-    
+    """
+    Reads the file saved from sangeethapriya_scraper.py
+    Obtains album hrefs for each of the files - this takes about 2 hours to run
+    Cleans the df to remove those entries that do not contain an album page
+    Saves that file as df_album_hrefs.csv
+    Samples 100 tracks from all the ragams that contain more than 100 files in the database
+    Parses through the album pages to obtain the download urls for each file
+    Cleans the df to remove those entries that do not contain a download url
+    Saves the df 
+    """
+
+    df = pd.read_csv('df_sangeethapriya.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
+    df = df_uploaders_album_ids(df[:1000])
+    df['Album hrefs'] = futures_albums(df['Uploader'], df['Album ID'], lim=2000)
+    #Takes about 2 hours to run
+    df = clean_no_null(df, 'Album hrefs')
+    df = df.drop(['Uploader', 'Album ID'], axis=1)
+    df.to_csv('df_album_hrefs.csv', index = False)
+    df = high_ragam_counts_sample(df, 2, 2)
+    df['Download URLs'] = download_urls(df, start = 0, end = len(df), cookie = cookie)
+    #Takes about 8-9 hours to run
+    df = clean_no_null(df, 'Download URLs')
+    df.to_csv('sample_download_df.csv')
 
 if __name__ == '__main__':
     main()
