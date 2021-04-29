@@ -88,7 +88,10 @@ def get_no_null_df(df):
     the dataframe. The dataframe that is input is the one
     that contains no null entries in the Album hrefs.
     args: df - dataframe containing the Ragam
-    
+        : x - number of tracks per ragam
+        : samp - number of tracks to sample in a ragam
+    return: None
+    Saves : Saves a csv file with the dataframe of sampled tracks    
     """
     ragam_counts = df['Ragam'].value_counts()
     high_ragam_counts = ragam_counts[ragam_counts > x]
@@ -97,11 +100,113 @@ def get_no_null_df(df):
     for i in range(len(high_ragam_counts)):
         high_ragams_df = over_x_df[over_x_df['Ragam']==list(high_ragam_counts.keys())[i]]
         sample_df.append(high_ragams_df.sample(samp, random_state = 0))
-    ##Still have to probably save the df
-
+    
+    sample_df.to_csv('over{}ragams{}sample.csv'.format(x,sample))
     return sample_df
-
-## Have to write function to get the urls from the album hrefs
 
 
 def freq_ragams_df(df):
+
+
+
+
+
+def get_url_download_(response, track_table):
+    """
+    Parses html page to obtain the download url for the right track
+    Contains error handling to handle pages that don't contain
+    download urls or where the pages don't exist
+    args: response from the get request. 
+        : track_table - the track number that needs to be parsed
+    returns: download_url for the appropriate file
+    """
+    regex = '0?{}'.format(track_table)
+    soup = BeautifulSoup(response.text)
+    filelist_text = soup.find('ul',{'id':'filelist'})
+
+    if filelist_text is None:
+        return('None')
+    else:
+        print(filelist_text)
+        if filelist_text.find_all('li', {'class':'audio'}) is None:
+            return('None')
+        else:
+            filelist_files = filelist_text.find_all('li',{'class':'audio'})
+
+            for item in filelist_files:
+                h2_text = item.find('h2').text
+                track_no = re.findall("\d+", h2_text)
+                if re.search(regex, track_no[0]) is None:
+                    continue
+                else:
+                    download_item = item.find('a',{'class':'download'})
+                    start = str(download_item).find('http')
+                    down_start_str = str(download_item)[start:]
+                    end = down_start_str.find('\"')
+                    return(str(download_item)[start:start + end])
+    return('None')
+
+
+
+def download_urls(df, start = 0, end = 10, cookie = cookie):
+    """
+    Obtain downloads urls given the dataframe including the album hrefs
+    args: df - dataframe containing album hrefs
+        : start - start of df
+        : end - end of df - default set to 10 - must use len(df)
+        : cookie - cookie required to get the post requests
+    returns: all_download_urls - list of all download urls
+    """
+    all_download_urls = []
+    for i in range(start, end):
+        #Print the current time for every 50 urls obtained
+        if i%50 ==0:
+            now = datetime.now()
+            current_time = str(now.strftime("%H:%M:%S"))
+            print("{} Current Time = {}".format(i, current_time))
+        payload = {}
+        headers = {'Cookie': cookie}
+         
+        url = df['Album hrefs'][i]
+        track = df['Track'][i]
+
+        session = requests.Session()
+        retry = Retry(connect=3, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        
+        try:
+            response = session.get(url, headers = headers, data = payload)
+            if response.status_code == 200:
+                all_download_urls.append(get_url_download_(response, str(track)))
+            else:
+                all_download_urls.append('None')
+        except:
+            all_download_urls.append('None')
+        
+    return all_download_urls
+
+
+def append_download_urls_save_df(df, download_urls, filename):
+    """
+    Appends a column to the df to include the download urls
+    for each file
+    """
+    df['Download URLs'] = download_urls
+    df.to_csv(filename, index=False)
+    return
+
+def clean_no_null(df):
+    """
+    Removes the entries that do not have download_urls
+    args: df
+    returns: df
+    """
+    return(df[df['Download URLs'] != 'None'])
+
+def main():
+    
+
+if __name__ == '__main__':
+    main()

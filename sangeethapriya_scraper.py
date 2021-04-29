@@ -1,4 +1,3 @@
-
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -71,5 +70,5 @@ def main():
     sangeethapriya_df(composers, ragams, kritis, artists, uploaders, 'df_sangeethapriya')
     return
 
-if __name__ == 'main':
+if __name__ == '__main__':
     main()
