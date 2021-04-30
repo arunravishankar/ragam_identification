@@ -9,7 +9,8 @@ from requests.packages.urllib3.util.retry import Retry
 
 # Update this every time you run it
 
-cookie = 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=gfhi25ituanlqev6068p0v1kg4; _gat=1; sessiontime=1619698875'
+cookie =  'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=gpkn86p2im4t9jqubp69r2dqp4; _gat=1; sessiontime=1619737031'
+
 
 
 
@@ -118,7 +119,7 @@ def get_url_download_(response, track_table):
     returns: download_url for the appropriate file
     """
     regex = '0?{}'.format(track_table)
-    soup = BeautifulSoup(response.text)
+    soup = BeautifulSoup(response.text, features=html.parser)
     filelist_text = soup.find('ul',{'id':'filelist'})
 
     if filelist_text is None:
@@ -224,12 +225,16 @@ def main():
     #df = clean_no_null(df, 'Album hrefs')
     #df = df.drop(['Uploader', 'Album ID'], axis=1)
     #df.to_csv('df_album_hrefs.csv', index = False)
-    df = pd.read_csv('df_album_hrefs.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
+    df = pd.read_csv('df_album_hrefs.csv')
     df = high_ragam_counts_sample(df, 100, 100)
     df['Download URLs'] = download_urls(df, start = 0, end = len(df), cookie = cookie)
     #Takes about 8-9 hours to run
     df = clean_no_null(df, 'Download URLs')
     df.to_csv('sample_download_df.csv')
+    
 
+    ## Write rows to files instead of writing the whole file directly
+    ## If I am running parallel downloads, I will need to write to a dictionary
+    ## and then read from that.
 if __name__ == '__main__':
     main()
