@@ -218,13 +218,13 @@ def main():
     Saves the df 
     """
 
-    #df = pd.read_csv('df_sangeethapriya.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
-    #df = df_uploaders_album_ids(df)
-    #df['Album hrefs'] = futures_albums(df['Uploader'], df['Album ID'], lim=2000)
+    df = pd.read_csv('df_sangeethapriya.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
+    df = df_uploaders_album_ids(df)
+    df['Album hrefs'] = futures_albums(df['Uploader'], df['Album ID'], lim=2000)
     #Takes about 2 hours to run
-    #df = clean_no_null(df, 'Album hrefs')
-    #df = df.drop(['Uploader', 'Album ID'], axis=1)
-    #df.to_csv('df_album_hrefs.csv', index = False)
+    df = clean_no_null(df, 'Album hrefs')
+    df = df.drop(['Uploader', 'Album ID'], axis=1)
+    df.to_csv('df_album_hrefs.csv', index = False)
     df = pd.read_csv('df_album_hrefs.csv')
     df = high_ragam_counts_sample(df, 100, 100)
     df['Download URLs'] = download_urls(df, start = 0, end = len(df), cookie = cookie)
