@@ -16,14 +16,14 @@ headers = {
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-Site': 'same-origin',
     'Sec-Fetch-Mode': 'navigate',
     'Sec-Fetch-User': '?1',
     'Sec-Fetch-Dest': 'document',
+    'Referer': 'https://www.sangeethamshare.org/login.php?url=%2Ftvg%2FUPLOADS-5201---5400%2F5268-V_Subramaniam%2F',
     'Accept-Language': 'en-US,en;q=0.9',
-    'Cookie': 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=94sl2ikuaebethc0gu6t9vm0ud; sessiontime=1619851905; _gat=1; PHPSESSID=94sl2ikuaebethc0gu6t9vm0ud; sessiontime=1619851905'
+    'Cookie': 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=94sl2ikuaebethc0gu6t9vm0ud; _gat=1; sessiontime=1619866771; PHPSESSID=94sl2ikuaebethc0gu6t9vm0ud; sessiontime=1619866771'
 }
-
 
 def df_uploaders_album_ids(df):
     """
@@ -237,7 +237,7 @@ def main():
     album_hrefs = list(df['Album hrefs'])
     new_album_hrefs = ["https://www." + item[7:] + '/' for item in album_hrefs]
     df['Album hrefs'] = new_album_hrefs
-    df = high_ragam_counts_sample(df, 100, 100).sample(100, random_state = 0)
+    df = high_ragam_counts_sample(df, 100, 100)
     df['Download URLs'] = download_urls(df, start = 0, end = len(df), headers = headers)
     #Takes about 8-9 hours to run
     df = clean_no_null(df, 'Download URLs')
