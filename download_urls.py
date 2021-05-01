@@ -8,10 +8,21 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 # Update this every time you run it
-
-cookie =  'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=gpkn86p2im4t9jqubp69r2dqp4; _gat=1; sessiontime=1619737031'
-
-
+headers = {
+    'Connection': 'keep-alive',
+    'Cache-Control': 'max-age=0',
+    'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="90", "Google Chrome";v="90"',
+    'sec-ch-ua-mobile': '?0',
+    'Upgrade-Insecure-Requests': '1',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-User': '?1',
+    'Sec-Fetch-Dest': 'document',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Cookie': 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=94sl2ikuaebethc0gu6t9vm0ud; sessiontime=1619851905; _gat=1; PHPSESSID=94sl2ikuaebethc0gu6t9vm0ud; sessiontime=1619851905'
+}
 
 
 def df_uploaders_album_ids(df):
@@ -36,7 +47,7 @@ def get_album_href_(response):
     args: response - response from a futures request
     return: album_href
     """
-    soup = BeautifulSoup(response.text)
+    soup = BeautifulSoup(response.text, features = "html.parser")
     div_main = soup.find('div', {'id':'main'})
     if div_main is None:                # Error handling
         album_href = 'None'
@@ -119,13 +130,11 @@ def get_url_download_(response, track_table):
     returns: download_url for the appropriate file
     """
     regex = '0?{}'.format(track_table)
-    soup = BeautifulSoup(response.text, features=html.parser)
+    soup = BeautifulSoup(response.text, features = "html.parser")
     filelist_text = soup.find('ul',{'id':'filelist'})
-
     if filelist_text is None:
         return('None')
     else:
-        #print(filelist_text)
         if filelist_text.find_all('li', {'class':'audio'}) is None:
             return('None')
         else:
@@ -146,7 +155,7 @@ def get_url_download_(response, track_table):
 
 
 
-def download_urls(df, start = 0, end = 10, cookie = cookie):
+def download_urls(df, start = 0, end = 10, headers = headers):
     """
     Obtain downloads urls given the dataframe including the album hrefs
     args: df - dataframe containing album hrefs
@@ -158,6 +167,7 @@ def download_urls(df, start = 0, end = 10, cookie = cookie):
     all_download_urls = []
     urls = list(df['Album hrefs'])
     tracks = list(df['Track'])
+
     for i in range(start, end):
         #Print the current time for every 50 urls obtained
         if i%50 ==0:
@@ -165,25 +175,20 @@ def download_urls(df, start = 0, end = 10, cookie = cookie):
             current_time = str(now.strftime("%H:%M:%S"))
             print("{} Current Time = {}".format(i, current_time))
         payload = {}
-        headers = {'Cookie': cookie}
+        headers = headers
         url = urls[i]
         track = tracks[i]
 
-        session = requests.Session()
-        retry = Retry(connect=3, backoff_factor=0.5)
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
         
         try:
-            response = session.get(url, headers = headers, data = payload)
+            response = requests.request("GET", url, headers=headers, data=payload)
             if response.status_code == 200:
                 all_download_urls.append(get_url_download_(response, str(track)))
             else:
                 all_download_urls.append('None')
         except:
             all_download_urls.append('None')
-        
+
     return all_download_urls
 
 
@@ -218,16 +223,22 @@ def main():
     Saves the df 
     """
 
-    df = pd.read_csv('df_sangeethapriya.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
-    df = df_uploaders_album_ids(df)
-    df['Album hrefs'] = futures_albums(df['Uploader'], df['Album ID'], lim=2000)
+    #df = pd.read_csv('df_sangeethapriya.csv', names=["Concert ID","Track","Kriti","Ragam","Composer","Main Artist"])
+    #df = df_uploaders_album_ids(df)
+    #df['Album hrefs'] = futures_albums(df['Uploader'], df['Album ID'], lim=2000)
+    
     #Takes about 2 hours to run
-    df = clean_no_null(df, 'Album hrefs')
-    df = df.drop(['Uploader', 'Album ID'], axis=1)
-    df.to_csv('df_album_hrefs.csv', index = False)
+    
+    #df = clean_no_null(df, 'Album hrefs')
+    #df = df.drop(['Uploader', 'Album ID'], axis=1)
+    #df.to_csv('df_album_hrefs.csv', index = False)
+    
     df = pd.read_csv('df_album_hrefs.csv')
-    df = high_ragam_counts_sample(df, 100, 100)
-    df['Download URLs'] = download_urls(df, start = 0, end = len(df), cookie = cookie)
+    album_hrefs = list(df['Album hrefs'])
+    new_album_hrefs = ["https://www." + item[7:] + '/' for item in album_hrefs]
+    df['Album hrefs'] = new_album_hrefs
+    df = high_ragam_counts_sample(df, 100, 100).sample(100, random_state = 0)
+    df['Download URLs'] = download_urls(df, start = 0, end = len(df), headers = headers)
     #Takes about 8-9 hours to run
     df = clean_no_null(df, 'Download URLs')
     df.to_csv('sample_download_df.csv')
