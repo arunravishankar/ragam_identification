@@ -233,17 +233,25 @@ def main():
     #df = df.drop(['Uploader', 'Album ID'], axis=1)
     #df.to_csv('df_album_hrefs.csv', index = False)
     
-    df = pd.read_csv('df_album_hrefs.csv')
-    album_hrefs = list(df['Album hrefs'])
-    new_album_hrefs = ["https://www." + item[7:] + '/' for item in album_hrefs]
-    df['Album hrefs'] = new_album_hrefs
-    df = high_ragam_counts_sample(df, 100, 100)
-    df['Download URLs'] = download_urls(df, start = 0, end = len(df), headers = headers)
+    #df = pd.read_csv('df_album_hrefs.csv')
+    #album_hrefs = list(df['Album hrefs'])
+    #new_album_hrefs = ["https://www." + item[7:] + '/' for item in album_hrefs]
+    #df['Album hrefs'] = new_album_hrefs
+    #df = high_ragam_counts_sample(df, 100, 100)
+    #df['Download URLs'] = download_urls(df, start = 0, end = len(df), headers = headers)
     #Takes about 8-9 hours to run
-    df = clean_no_null(df, 'Download URLs')
-    df.to_csv('sample_download_df.csv')
+    #df = clean_no_null(df, 'Download URLs')
+    #df.to_csv('sample_download_df.csv')
     
-
+    #df = pd.read_csv('sample_download_df.csv')
+    #ragams_130 = list(df['Ragam'].unique())
+    #df_50 = df[df['Ragam'] == ragams_130[0]].sample(50, random_state = 0)
+    #for i in range(1, len(ragams_130)):
+        #df_50 = df_50.append(df[df['Ragam']==ragams_130[i]].sample(50, random_state = 0))
+    #df_50.to_csv('sample_50_df.csv')
+    df_50 = pd.read_csv('sample_50_df.csv')
+    df_50 = df_50.sample(frac=1, random_state=0)
+    df_50.to_csv('sample_50_rand_df.csv')
     ## Write rows to files instead of writing the whole file directly
     ## If I am running parallel downloads, I will need to write to a dictionary
     ## and then read from that.
