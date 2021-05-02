@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 import warnings
 warnings.filterwarnings("ignore")
+import sys
     
 
 cookie = 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=0tdns5cv55be6rghl519hed2bv; _gat=1; sessiontime=1619932903'
@@ -77,10 +78,17 @@ def download_get_features(df, filename, savefile):
     df.to_csv(savefile)
     return(size)
 
-begin_time = datetime.now()
-df = pd.read_csv('sample_50_rand_df.csv')
+def main():
 
-size = download_get_features(df[:2], 'get_features_1.mp3', 'features_1.csv')
-print("Total time to process the files is :", datetime.now() - begin_time)
-print("Total data processed is :", size, "MB")
-# Have to handle errors in downloads
+    begin_time = datetime.now()
+    df = pd.read_csv('sample_50_rand_df_temp_1.csv')
+    df = df.reset_index(drop = True)
+
+    size = download_get_features(df, 'get_features_temp_1.mp3', 'features_temp_1.csv')
+    print("Total time to process the files is :", datetime.now() - begin_time)
+    print("Total data processed is :", size, "MB")
+    # Have to handle errors in downloads
+    return
+if __name__ =='__main__':
+    main()
+
