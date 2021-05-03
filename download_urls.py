@@ -254,7 +254,8 @@ def main():
     #df_50.to_csv('sample_50_rand_df.csv')
     
     df_50 = pd.read_csv('sample_50_df.csv')
-    df_50[6000:6500].to_csv('sample_50_rand_df_13.csv')    
+    df_50 = df_50.sample(frac=1, random_state = 0)
+    df_50.to_csv('sample_50_rand_df.csv')    
     ## Write rows to files instead of writing the whole file directly
     ## If I am running parallel downloads, I will need to write to a dictionary
     ## and then read from that.

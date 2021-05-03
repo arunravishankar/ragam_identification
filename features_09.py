@@ -73,11 +73,10 @@ def download_get_features(df, filename, workdir):
     size = 0
     
     for index, row in df.iterrows():
-        chroma_file = workdir + 'chroma_' + str(index) + '.csv'
-        spec_cent_file = workdir + 'spec_cent_' + str(index) + '.csv'
+        chroma_file = os.path.join(workdir, 'chroma_' + str(index) + '.csv')
+        spec_cent_file = os.path.join(workdir, 'spec_cent_' + str(index) + '.csv')
 
         url = row['Download URLs']        
-
         if index%10==0:
             print(index, "Current Time =", datetime.now().strftime("%H:%M:%S"))
         
@@ -97,12 +96,11 @@ def download_get_features(df, filename, workdir):
 
 def main():
     cwd = os.getcwd()
-    features_dir = cwd + '/features/'
+    features_dir = os.path.join(cwd, 'features')
     begin_time = datetime.now()
-    df = pd.read_csv('sample_50_rand_df_1.csv')
-    df = df.reset_index(drop = True)
-
-    size = download_get_features(df[0:4], 'get_features_temp.mp3', features_dir)
+    df = pd.read_csv('sample_50_rand_df.csv')
+    #df = df.reset_index(drop = True)
+    size = download_get_features(df[4000:4500], 'get_features_09.mp3', features_dir)
     print("Total time to process the files is :", datetime.now() - begin_time)
     print("Total data processed is :", size, "MB")
     # Have to handle errors in downloads
