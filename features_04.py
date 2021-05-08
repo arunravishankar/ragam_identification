@@ -11,7 +11,7 @@ import sys
 import csv
     
 
-cookie = 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.589416232.1619580559; PHPSESSID=kkheb7n8r2qk24uadccn00vsh9; sessiontime=1620032204; _gat=1'
+cookie = 'G_ENABLED_IDPS=google; _ga=GA1.2.1416645183.1618886299; G_AUTHUSER_H=0; sangeethamshare_login=arunravishankar%40gmail.com; _gid=GA1.2.1341742613.1620334341; PHPSESSID=duk4dh5lmiq7orb38ik0bgvpk7; _gat=1; sessiontime=1620448506'
 
 def get_features_from_mp3_(file, hop_length=1000, n_chroma=50):
     """
@@ -22,12 +22,13 @@ def get_features_from_mp3_(file, hop_length=1000, n_chroma=50):
                                              sr=sr, 
                                              hop_length=hop_length, 
                                              n_chroma = n_chroma)
-    spectral_centroid = librosa.feature.spectral_centroid(x, 
-                                                          sr=sr, 
-                                                          hop_length=hop_length)                  
-    max_index = [np.argmax([chromagram[i][j] for i in range(0,n_chroma-1)]) for j in range(chromagram.shape[1])]
+    #spectral_centroid = librosa.feature.spectral_centroid(x, 
+    #                                                      sr=sr, 
+    #                                                      hop_length=hop_length)                  
+    #max_index = [np.argmax([chromagram[i][j] for i in range(0,n_chroma-1)]) for j in range(chromagram.shape[1])]
     
-    return(max_index, spectral_centroid)
+    return(chromagram)
+    #return(max_index, spectral_centroid)
 
 def download_file_(url, filename, cookie = cookie):
     """
@@ -73,8 +74,8 @@ def download_get_features(df, filename, workdir):
     size = 0
     
     for index, row in df.iterrows():
-        chroma_file = os.path.join(workdir, 'chroma_' + str(index) + '.csv')
-        spec_cent_file = os.path.join(workdir, 'spec_cent_' + str(index) + '.csv')
+        chroma_file = os.path.join(workdir, 'full_chroma_' + str(index) + '.csv')
+        #spec_cent_file = os.path.join(workdir, 'spec_cent_' + str(index) + '.csv')
 
         url = row['Download URLs']        
         if index%10==0:
@@ -83,10 +84,10 @@ def download_get_features(df, filename, workdir):
         now = datetime.now()
         try:
             size += download_file_(url, filename)
-            chromagram, spectral_centroid = get_features_from_mp3_(filename)
-            
+            #chromagram, spectral_centroid = get_features_from_mp3_(filename)
+            chromagram = get_features_from_mp3_(filename)
             np.savetxt(chroma_file, chromagram, delimiter = ",")
-            np.savetxt(spec_cent_file, spectral_centroid, delimiter = ",")
+            #np.savetxt(spec_cent_file, spectral_centroid, delimiter = ",")
             
             delete_file_(filename)
         except:
@@ -100,7 +101,7 @@ def main():
     begin_time = datetime.now()
     df = pd.read_csv('sample_50_rand_df.csv')
     #df = df.reset_index(drop = True)
-    size = download_get_features(df[1500:2000], 'get_features_04.mp3', features_dir)
+    size = download_get_features(df[1500:2000], 'get_features_01.mp3', features_dir)
     print("Total time to process the files is :", datetime.now() - begin_time)
     print("Total data processed is :", size, "MB")
     # Have to handle errors in downloads
