@@ -22,3 +22,9 @@ tensorflow_macos/arm64/.DS_Store
 tensorflow_macos/install_venv.sh
 
 tensorflow_macos/x86_64/scipy-1.5.4-cp38-cp38-macosx_11_0_x86_64.whl
+songs/
+download_mp3s_*
+
+features_*
+labels*
+mel_features_*
